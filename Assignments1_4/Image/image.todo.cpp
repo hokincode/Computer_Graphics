@@ -18,12 +18,12 @@ Image32 Image32::addRandomNoise( double noise ) const
 		double random_green = (((double)rand())/((double)RAND_MAX)*2)-1;
 		double random_red = (((double)rand())/((double)RAND_MAX)*2)-1;
 		double random_blue = (((double)rand())/((double)RAND_MAX)*2)-1;
-		unsigned char temporary_red = (*iter).r + (*iter).r * random_red * noise;
-		unsigned char temporary_green = (*iter).g + (*iter).g * random_green * noise;
-		unsigned char temporary_blue = (*iter).b + (*iter).b * random_blue * noise;
-		(*iter).r = std::min(std::max(temporary_red, (unsigned char)0), (unsigned char)255);
-		(*iter).g = std::min(std::max(temporary_green, (unsigned char)0), (unsigned char)255);
-		(*iter).b = std::min(std::max(temporary_blue, (unsigned char)0), (unsigned char)255);
+		int temporary_red = (*iter).r + (*iter).r * random_red * noise;
+		int temporary_green = (*iter).g + (*iter).g * random_green * noise;
+		int temporary_blue = (*iter).b + (*iter).b * random_blue * noise;
+		(*iter).r = (unsigned char) std::min(std::max(temporary_red, 0), 255);
+		(*iter).g = (unsigned char) std::min(std::max(temporary_green, 0), 255);
+		(*iter).b = (unsigned char) std::min(std::max(temporary_blue, 0), 255);
 	}
 	///////////////////////////
 	// Add random noise here //
@@ -36,8 +36,18 @@ Image32 Image32::brighten( double brightness ) const
 	/////////////////////////
 	// Do brightening here //
 	/////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+
+	for (iterator iter = img.begin(); iter != img.end(); ++iter) {
+		int temporary_red = (*iter).r  * brightness;
+		int temporary_green = (*iter).g  * brightness;
+		int temporary_blue = (*iter).b  * brightness;
+		(*iter).r = (unsigned char) std::min(std::max(temporary_red, 0), 255);
+		(*iter).g = (unsigned char) std::min(std::max(temporary_green, 0), 255);
+		(*iter).b = (unsigned char) std::min(std::max(temporary_blue, 0), 255);
+	}
+
+	return img;
 }
 
 Image32 Image32::luminance( void ) const
