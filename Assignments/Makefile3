@@ -1,0 +1,66 @@
+TARGET = Assignment3
+DEPENDENDENT_DIRS = Image Util Ray GL
+SOURCE = main3.cpp
+
+ifeq ($(OS),Windows_NT)
+    detected_OS := Windows
+else
+    detected_OS := $(shell uname)
+endif
+
+CFLAGS += -I. -I.. -std=c++14 -Wunused-result
+ifeq ($(detected_OS),Darwin)
+	LFLAGS += -L. -lRay -lGLEW -lImage -lUtil -framework GLUT -framework OpenGL -ljpeg
+else
+	LFLAGS += -L. -lRay -lGLEW -lImage -lUtil -lglut -lGLU -lGL -ljpeg
+endif
+
+CFLAGS_DEBUG = -DDEBUG -g3
+LFLAGS_DEBUG =
+CFLAGS_RELEASE = -O3 -DRELEASE -funroll-loops -ffast-math -DNDEBUG
+LFLAGS_RELEASE = -O3 
+
+SRC = ./
+BIN = ./
+BIN_O = ./Bin/Linux/Release/$(TARGET)/
+INCLUDE = /usr/include/
+
+CC  = gcc
+CXX = g++
+MD  = mkdir
+AR  = ar
+
+OBJECTS=$(addprefix $(BIN_O), $(addsuffix .o, $(basename $(SOURCE))))
+
+all: CFLAGS += $(CFLAGS_RELEASE)
+all: LFLAGS += $(LFLAGS_RELEASE)
+all: $(BIN)
+all: $(BIN_O)
+all: $(BIN)$(TARGET)
+
+debug: CFLAGS += $(CFLAGS_DEBUG)
+debug: LFLAGS += $(LFLAGS_DEBUG)
+debug: $(BIN)
+debug: $(BIN_O)
+debug: $(BIN)$(TARGET)
+
+clean:
+	rm -f $(BIN)$(TARGET)
+	rm -f $(OBJECTS)
+	for dir in $(DEPENDENDENT_DIRS); do make clean -C $$dir; done
+
+$(BIN):
+	$(MD) -p $(BIN)
+
+$(BIN_O):
+	$(MD) -p $(BIN_O)
+
+$(BIN)$(TARGET): $(OBJECTS)
+	for dir in $(DEPENDENDENT_DIRS); do make -C $$dir; done
+	$(CXX) -o $@ $(OBJECTS) $(LFLAGS)
+
+$(BIN_O)%.o: $(SRC)%.c
+	$(CC) -c -o $@ $(CFLAGS) -I$(INCLUDE) $<
+
+$(BIN_O)%.o: $(SRC)%.cpp
+	$(CXX) -c -o $@ $(CFLAGS) -I$(INCLUDE) $<
