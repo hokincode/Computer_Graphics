@@ -52,29 +52,57 @@ Image32 Image32::brighten( double brightness ) const
 
 Image32 Image32::luminance( void ) const
 {
-	//////////////////////////////////
-	// Compute luminance image here //
-	//////////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+
+	for (iterator iter = img.begin(); iter != img.end(); ++iter) {
+		int luminance_level = 0.30 * (*iter).r + 0.59 * (*iter).g + 0.11 * (*iter).b;
+		(*iter).r = (unsigned char) std::min(std::max(luminance_level, 0), 255);
+		(*iter).g = (unsigned char) std::min(std::max(luminance_level, 0), 255);
+		(*iter).b = (unsigned char) std::min(std::max(luminance_level, 0), 255);
+	}
+
+	return img;
 }
 
 Image32 Image32::contrast( double contrast ) const
 {
-	//////////////////////////////////
-	// Do contrast enhancement here //
-	//////////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	int luminance_summation = 0;
+
+	for (iterator iter = img.begin(); iter != img.end(); ++iter) {
+		int luminance_level = 0.30 * (*iter).r + 0.59 * (*iter).g + 0.11 * (*iter).b;
+		luminance_summation = luminance_summation + luminance_level;
+	}
+
+	int luminance_average = luminance_summation / (img._height * img._width);
+
+	for (iterator iter = img.begin(); iter != img.end(); ++iter) {
+		int temporary_red = ((*iter).r - luminance_average) * contrast + luminance_average;
+		int temporary_green = ((*iter).g - luminance_average) * contrast + luminance_average;
+		int temporary_blue = ((*iter).b - luminance_average) * contrast + luminance_average;
+		(*iter).r = (unsigned char) std::min(std::max(temporary_red, 0), 255);
+		(*iter).g = (unsigned char) std::min(std::max(temporary_green, 0), 255);
+		(*iter).b = (unsigned char) std::min(std::max(temporary_blue, 0), 255);
+	}
+
+	return img;
 }
 
 Image32 Image32::saturate( double saturation ) const
 {
-	////////////////////////////////////
-	// Do saturation enhancement here //
-	////////////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+
+	for (iterator iter = img.begin(); iter != img.end(); ++iter) {
+		int luminance_level = 0.30 * (*iter).r + 0.59 * (*iter).g + 0.11 * (*iter).b;
+		int temporary_red = ((*iter).r - luminance_level) * saturation + luminance_level;
+		int temporary_green = ((*iter).g - luminance_level) * saturation + luminance_level;
+		int temporary_blue = ((*iter).b - luminance_level) * saturation + luminance_level;
+		(*iter).r = (unsigned char) std::min(std::max(luminance_level, 0), 255);
+		(*iter).g = (unsigned char) std::min(std::max(luminance_level, 0), 255);
+		(*iter).b = (unsigned char) std::min(std::max(luminance_level, 0), 255);
+	}
+
+	return img;
 }
 
 Image32 Image32::quantize( int bits ) const
@@ -82,8 +110,25 @@ Image32 Image32::quantize( int bits ) const
 	//////////////////////////
 	// Do quantization here //
 	//////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+
+	for (iterator iter = img.begin(); iter != img.end(); ++iter) {
+		int temporary_red_intensity =  (*iter).r/255;
+		int temporary_green_intensity = (*iter).g/255;
+		int temporary_blue_intensity = (*iter).b/255;
+		int power = pow(2,bits);
+		int temporary_bits_red = floor(temporary_red_intensity * power);
+		int temporary_bits_green = floor(temporary_green_intensity * power);
+		int temporary_bits_blue = floor(temporary_blue_intensity * power);
+		int temporary_red = temporary_bits_red / power * 255;
+		int temporary_green = temporary_bits_green / power * 255;
+		int temporary_blue = temporary_bits_blue / power * 255;
+		(*iter).r = (unsigned char) std::min(std::max(temporary_red, 0), 255);
+		(*iter).g = (unsigned char) std::min(std::max(temporary_green, 0), 255);
+		(*iter).b = (unsigned char) std::min(std::max(temporary_blue, 0), 255);
+	}
+
+	return img;
 }
 
 Image32 Image32::randomDither( int bits ) const
