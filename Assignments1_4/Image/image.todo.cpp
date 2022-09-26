@@ -187,8 +187,44 @@ Image32 Image32::floydSteinbergDither( int bits ) const
 	///////////////////////////////////////
 	// Do Floyd-Steinberg dithering here //
 	///////////////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	double alpha = 7 / 16;
+	double beta = 3 / 16;
+	double gamma = 5 / 16;
+	double delta = 1 / 16;
+	for (int h = 1; h < img._height - 1; h++) {
+		for (int w = 1; w <img._width - 1; w++) {
+			double temporary_red_intensity =  img(h,w).r/255.0;
+			double temporary_green_intensity = img(h,w).g/255.0;
+			double temporary_blue_intensity = img(h,w).b/255.0;
+			double power = pow(2,bits);
+			int temporary_bits_red = floor(temporary_red_intensity * power);
+			int temporary_bits_green = floor(temporary_green_intensity * power);
+			int temporary_bits_blue = floor(temporary_blue_intensity * power);
+			int temporary_red = temporary_bits_red / (power-1) * 255;
+			int temporary_green = temporary_bits_green / (power-1) * 255;
+			int temporary_blue = temporary_bits_blue / (power-1) * 255;
+			double r = std::min(std::max(temporary_red, 0), 255);
+			double g = std::min(std::max(temporary_green, 0), 255);
+			double b = std::min(std::max(temporary_blue, 0), 255);
+			double error_red = img(h,w).r - r;
+			double error_blue = img(h,w).b - b;
+			double error_green = img(h,w).g - g;
+			img(h+1,w).r = r + alpha * error_red;
+			img(h-1,w+1).r = r +beta * error_red;
+			img(h,w+1).r = r + gamma * error_red;
+			img(h+1,w+1).r = r + delta * error_red;
+			img(h+1,w).g = g + alpha * error_green;
+			img(h-1,w+1).g = g + beta * error_green;
+			img(h,w+1).g = g + gamma * error_green;
+			img(h+1,w+1).g = g + delta * error_green;
+			img(h+1,w).b = b + alpha * error_blue;
+			img(h-1,w+1).b = b + beta * error_blue;
+			img(h,w+1).b = b + gamma * error_blue;
+			img(h+1,w+1).b = b + delta * error_blue;
+		}
+	}
+	return img;
 }
 
 Image32 Image32::blur3X3( void ) const
