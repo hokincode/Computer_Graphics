@@ -188,15 +188,17 @@ Image32 Image32::floydSteinbergDither( int bits ) const
 	// Do Floyd-Steinberg dithering here //
 	///////////////////////////////////////
 	Image32 img(*this);
-	double alpha = 7 / 16;
-	double beta = 3 / 16;
-	double gamma = 5 / 16;
-	double delta = 1 / 16;
-	for (int h = 1; h < img._height - 1; h++) {
-		for (int w = 1; w <img._width - 1; w++) {
-			double temporary_red_intensity =  img(h,w).r/255.0;
-			double temporary_green_intensity = img(h,w).g/255.0;
-			double temporary_blue_intensity = img(h,w).b/255.0;
+	Image32 dest;
+	dest.setSize(_width,_height);
+	double alpha = 7.0 / 16.0;
+	double beta = 3.0 / 16.0;
+	double gamma = 5.0 / 16.0;
+	double delta = 1.0 / 16.0;
+	for (int h = 0; h < img._height; h++) {
+		for (int w = 0; w <img._width; w++) {
+			double temporary_red_intensity =  img(w,h).r/255.0;
+			double temporary_green_intensity = img(w,h).g/255.0;
+			double temporary_blue_intensity = img(w,h).b/255.0;
 			double power = pow(2,bits);
 			int temporary_bits_red = floor(temporary_red_intensity * power);
 			int temporary_bits_green = floor(temporary_green_intensity * power);
@@ -204,27 +206,131 @@ Image32 Image32::floydSteinbergDither( int bits ) const
 			int temporary_red = temporary_bits_red / (power-1) * 255;
 			int temporary_green = temporary_bits_green / (power-1) * 255;
 			int temporary_blue = temporary_bits_blue / (power-1) * 255;
-			double r = std::min(std::max(temporary_red, 0), 255);
-			double g = std::min(std::max(temporary_green, 0), 255);
-			double b = std::min(std::max(temporary_blue, 0), 255);
-			double error_red = img(h,w).r - r;
-			double error_blue = img(h,w).b - b;
-			double error_green = img(h,w).g - g;
-			img(h+1,w).r = r + alpha * error_red;
-			img(h-1,w+1).r = r +beta * error_red;
-			img(h,w+1).r = r + gamma * error_red;
-			img(h+1,w+1).r = r + delta * error_red;
-			img(h+1,w).g = g + alpha * error_green;
-			img(h-1,w+1).g = g + beta * error_green;
-			img(h,w+1).g = g + gamma * error_green;
-			img(h+1,w+1).g = g + delta * error_green;
-			img(h+1,w).b = b + alpha * error_blue;
-			img(h-1,w+1).b = b + beta * error_blue;
-			img(h,w+1).b = b + gamma * error_blue;
-			img(h+1,w+1).b = b + delta * error_blue;
+			unsigned char r = std::min(std::max(temporary_red, 0), 255);
+			unsigned char g = std::min(std::max(temporary_green, 0), 255);
+			unsigned char b = std::min(std::max(temporary_blue, 0), 255);
+			double error_red = img(w,h).r - r;
+			double error_blue = img(w,h).b - b;
+			double error_green = img(w,h).g - g;
+			dest(w,h).r = r;
+			dest(w,h).g = g;
+			dest(w,h).b = b;
+			int temp = 0;
+
+			int decision = 0;
+
+			if (h + 1 == img._height && w + 1 != img._width && w != 0) {
+				decision = 1;
+			} else if (w + 1 == img._width && h + 1 != img._height) {
+				decision = 2;
+			} else if (w == 0 && h + 1 != img._height) {
+				decision = 3;
+			} else if (w >= 1 && w < img._width - 1 && h < img._height - 1) {
+				decision = 4;
+			}
+
+			switch (decision) {
+				case 1: 
+					temp = (int) img(w+1,h).r + alpha * error_red;
+ 					img(w+1,h).r = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h).g + alpha * error_green;
+ 					img(w+1,h).g = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h).b + alpha * error_blue;
+ 					img(w+1,h).b = (unsigned char) std::min(std::max(temp, 0), 255);
+					break;
+
+				case 2:
+					temp = (int) img(w-1,h+1).r + beta * error_red;
+					img(w-1,h+1).r = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w,h+1).r + gamma * error_red;
+					img(w,h+1).r = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w-1,h+1).g + beta * error_green;
+					img(w-1,h+1).g = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w,h+1).g + gamma * error_green;
+					img(w,h+1).g = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w-1,h+1).b + beta * error_blue;
+					img(w-1,h+1).b = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w,h+1).b + gamma * error_blue;
+					img(w,h+1).b = (unsigned char) std::min(std::max(temp, 0), 255);
+					break;
+
+				case 3:
+					temp = (int) img(w+1,h).r + alpha * error_red;
+ 					img(w+1,h).r = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w,h+1).r + gamma * error_red;
+					img(w,h+1).r = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h+1).r + delta * error_red;
+					img(w+1,h+1).r = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h).g + alpha * error_green;
+ 					img(w+1,h).g = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w,h+1).g + gamma * error_green;
+					img(w,h+1).g = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h+1).g + delta * error_green;
+					img(w+1,h+1).g = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h).b + alpha * error_blue;
+ 					img(w+1,h).b = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w,h+1).b + gamma * error_blue;
+					img(w,h+1).b = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h+1).b + delta * error_blue;
+					img(w+1,h+1).b = (unsigned char) std::min(std::max(temp, 0), 255);
+					break;
+				
+				case 4:
+					temp = (int) img(w+1,h).r + alpha * error_red;
+ 					img(w+1,h).r = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w-1,h+1).r + beta * error_red;
+					img(w-1,h+1).r = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w,h+1).r + gamma * error_red;
+					img(w,h+1).r = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h+1).r + delta * error_red;
+					img(w+1,h+1).r = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h).g + alpha * error_green;
+ 					img(w+1,h).g = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w-1,h+1).g + beta * error_green;
+					img(w-1,h+1).g = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w,h+1).g + gamma * error_green;
+					img(w,h+1).g = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h+1).g + delta * error_green;
+					img(w+1,h+1).g = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h).b + alpha * error_blue;
+ 					img(w+1,h).b = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w-1,h+1).b + beta * error_blue;
+					img(w-1,h+1).b = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w,h+1).b + gamma * error_blue;
+					img(w,h+1).b = (unsigned char) std::min(std::max(temp, 0), 255);
+
+					temp = (int) img(w+1,h+1).b + delta * error_blue;
+					img(w+1,h+1).b = (unsigned char) std::min(std::max(temp, 0), 255);
+					break;
+			}
 		}
 	}
-	return img;
+	return dest;
 }
 
 Image32 Image32::blur3X3( void ) const
