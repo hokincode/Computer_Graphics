@@ -97,9 +97,9 @@ Image32 Image32::saturate( double saturation ) const
 		int temporary_red = ((*iter).r - luminance_level) * saturation + luminance_level;
 		int temporary_green = ((*iter).g - luminance_level) * saturation + luminance_level;
 		int temporary_blue = ((*iter).b - luminance_level) * saturation + luminance_level;
-		(*iter).r = (unsigned char) std::min(std::max(luminance_level, 0), 255);
-		(*iter).g = (unsigned char) std::min(std::max(luminance_level, 0), 255);
-		(*iter).b = (unsigned char) std::min(std::max(luminance_level, 0), 255);
+		(*iter).r = (unsigned char) std::min(std::max(temporary_red, 0), 255);
+		(*iter).g = (unsigned char) std::min(std::max(temporary_green, 0), 255);
+		(*iter).b = (unsigned char) std::min(std::max(temporary_blue, 0), 255);
 	}
 
 	return img;
@@ -113,16 +113,16 @@ Image32 Image32::quantize( int bits ) const
 	Image32 img(*this);
 
 	for (iterator iter = img.begin(); iter != img.end(); ++iter) {
-		int temporary_red_intensity =  (*iter).r/255;
-		int temporary_green_intensity = (*iter).g/255;
-		int temporary_blue_intensity = (*iter).b/255;
-		int power = pow(2,bits);
+		double temporary_red_intensity =  (*iter).r/255.0;
+		double temporary_green_intensity = (*iter).g/255.0;
+		double temporary_blue_intensity = (*iter).b/255.0;
+		double power = pow(2,bits);
 		int temporary_bits_red = floor(temporary_red_intensity * power);
 		int temporary_bits_green = floor(temporary_green_intensity * power);
 		int temporary_bits_blue = floor(temporary_blue_intensity * power);
-		int temporary_red = temporary_bits_red / power * 255;
-		int temporary_green = temporary_bits_green / power * 255;
-		int temporary_blue = temporary_bits_blue / power * 255;
+		int temporary_red = temporary_bits_red / (power-1) * 255;
+		int temporary_green = temporary_bits_green / (power-1) * 255;
+		int temporary_blue = temporary_bits_blue / (power-1) * 255;
 		(*iter).r = (unsigned char) std::min(std::max(temporary_red, 0), 255);
 		(*iter).g = (unsigned char) std::min(std::max(temporary_green, 0), 255);
 		(*iter).b = (unsigned char) std::min(std::max(temporary_blue, 0), 255);
@@ -136,8 +136,11 @@ Image32 Image32::randomDither( int bits ) const
 	//////////////////////////////
 	// Do random dithering here //
 	//////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	if (bits >= 8) return img;
+	img = img.addRandomNoise(1.0/(pow(2,bits)));
+	img = img.quantize(bits);	
+	return img;
 }
 
 Image32 Image32::orderedDither2X2( int bits ) const
@@ -145,8 +148,38 @@ Image32 Image32::orderedDither2X2( int bits ) const
 	///////////////////////////////
 	// Do ordered dithering here //
 	///////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	int power = pow(2,bits);
+	double level = power - 1;
+	int off = 255/(power - 1);
+	int matrix[2][2] = {{1,3},{4,2}};
+	double normality = 5;
+	for (int h = 0; h < img._height; h++) {
+		for (int w = 0; w <img._width; w++) {
+			double red = img(h,w).r/255.0*level;
+			double green = img(h,w).g/255.0*level;
+			double blue = img(h,w).b/255.0*level;
+			if (red - floor(red) > matrix[h%2][w%2]/normality) {
+				img(h,w).r = ceil(red);
+			} else {
+				img(h,w).r = floor(red);
+			}
+			if (green - floor(green) > matrix[h%2][w%2]/normality) {
+				img(h,w).g = ceil(green);
+			} else {
+				img(h,w).g = floor(green);
+			}
+			if (blue - floor(blue) > matrix[h%2][w%2]/normality) {
+				img(h,w).b = ceil(blue);
+			} else {
+				img(h,w).b = floor(blue);
+			}
+			img(h,w).r *= off;
+			img(h,w).b *= off;
+			img(h,w).g *= off;
+		}
+	}
+	return img;
 }
 
 Image32 Image32::floydSteinbergDither( int bits ) const
