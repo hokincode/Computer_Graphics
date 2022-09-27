@@ -762,11 +762,20 @@ Image32 Image32::scaleNearest( double scaleFactor ) const
 
 Image32 Image32::scaleBilinear( double scaleFactor ) const
 {
-	////////////////////////////////////////////
-	// Do scaling with bilinear sampling here //
-	////////////////////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	Image32 dest;
+	dest.setSize((int) img._width * scaleFactor, (int) img._height * scaleFactor);	
+
+	for (int h = 1; h < dest._height - 1; h++) {
+		for (int w = 1; w <dest._width - 1; w++) {
+			Point2D p;
+			p[0] = w / scaleFactor;
+			p[1] = h / scaleFactor;
+			dest(w,h) = img.bilinearSample(p);
+		}
+	}
+
+	return dest;
 }
 
 Image32 Image32::scaleGaussian( double scaleFactor ) const
@@ -842,11 +851,15 @@ Image32 Image32::warp( const OrientedLineSegmentPairs& olsp ) const
 
 Image32 Image32::funFilter( void ) const
 {
-	////////////////////////////
-	// Do the fun-filter here //
-	////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	Image32 dest;
+	dest.setSize(img._width,img._height);
+	for (int h = 0; h <= img._height - 1; h++) {
+		for (int w = 0; w <= img._width - 1; w++) {
+			dest(w,h) = img(img._width - 1 - w,img._height - 1 - h);
+		}
+	}
+	return dest;
 }
 
 Image32 Image32::crop( int x1 , int y1 , int x2 , int y2 ) const
@@ -854,8 +867,15 @@ Image32 Image32::crop( int x1 , int y1 , int x2 , int y2 ) const
 	//////////////////////
 	// Do cropping here //
 	//////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	Image32 dest;
+	dest.setSize((x2-x1+1),(y2-y1+1));
+	for (int h = 0; h <= dest._height - 1; h++) {
+		for (int w = 0; w <= dest._width - 1; w++) {
+			dest(w,h) = img(x1+w,y1+h);
+		}
+	}
+	return dest;
 }
 
 Pixel32 Image32::nearestSample( Point2D p ) const
@@ -863,8 +883,16 @@ Pixel32 Image32::nearestSample( Point2D p ) const
 	//////////////////////////////
 	// Do nearest sampling here //
 	//////////////////////////////
-	WARN( "method undefined" );
-	return Pixel32();
+	Pixel32 newpixel;
+
+	Image32 img(*this);
+
+	int s_w = floor(p[0] + 0.5);
+	int s_h = floor(p[1] + 0.5);
+
+	newpixel = img(s_w,s_h);
+
+	return newpixel;
 }
 
 Pixel32 Image32::bilinearSample( Point2D p ) const
@@ -872,8 +900,35 @@ Pixel32 Image32::bilinearSample( Point2D p ) const
 	///////////////////////////////
 	// Do bilinear sampling here //
 	///////////////////////////////
-	WARN( "method undefined" );
-	return Pixel32();
+	Pixel32 newpixel;
+
+	Image32 img(*this);
+
+	int s_w_u_1 = floor(p[0]);
+	int s_h_v_1 = floor(p[1]);
+	int s_w_u_2 = s_w_u_1 + 1;
+	int s_h_v_2 = s_h_v_1 + 1;
+
+	double du = p[0] - s_w_u_1;
+	double dv = p[1] - s_h_v_1;
+
+	double a_red = (double) (1-du) * img(s_w_u_1,s_h_v_1).r  + du * img(s_w_u_2,s_h_v_1).r;
+	double a_green = (double) (1-du) * img(s_w_u_1,s_h_v_1).g  + du * img(s_w_u_2,s_h_v_1).g;
+	double a_blue = (double) (1-du) * img(s_w_u_1,s_h_v_1).b  + du * img(s_w_u_2,s_h_v_1).b;
+
+	double b_red = (double) (1-du) * img(s_w_u_1,s_h_v_2).r  + du * img(s_w_u_2,s_h_v_2).r;
+	double b_green = (double) (1-du) * img(s_w_u_1,s_h_v_2).g  + du * img(s_w_u_2,s_h_v_2).g;
+	double b_blue = (double) (1-du) * img(s_w_u_1,s_h_v_2).b  + du * img(s_w_u_2,s_h_v_2).b;
+
+	double red = a_red * (1 - dv) + b_red * dv;
+	double blue = a_blue * (1 - dv) + b_blue * dv;
+	double green = a_green * (1 - dv) + b_green * dv;
+
+	newpixel.r = (unsigned char) std::min((int) std::max((int) red, 0), 255);
+	newpixel.b = (unsigned char) std::min((int) std::max((int) blue, 0), 255);
+	newpixel.g = (unsigned char) std::min((int) std::max((int) green, 0), 255);
+
+	return newpixel;
 }
 
 Pixel32 Image32::gaussianSample( Point2D p , double variance , double radius ) const
