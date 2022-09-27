@@ -335,29 +335,429 @@ Image32 Image32::floydSteinbergDither( int bits ) const
 
 Image32 Image32::blur3X3( void ) const
 {
-	//////////////////////
-	// Do blurring here //
-	//////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	Image32 dest;
+	dest.setSize(img._width,img._height);
+	std::vector<std::vector<double>> mask = {{1.0/16.0, 2.0/16.0, 1.0/16.0},{2.0/16.0, 4.0/16.0, 2.0/16.0},{1.0/16.0, 2.0/16.0, 1.0/16.0}};
+	for (int h = 1; h < img._height - 1; h++) {
+		for (int w = 1; w <img._width - 1; w++) {
+			double r = (
+				img(w-1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w+1,h-1).r * mask[0][2] +
+				img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+				img(w-1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w+1,h+1).r * mask[2][2]
+			);
+
+			double b = (
+				img(w-1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w+1,h-1).b * mask[0][2] +
+				img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+				img(w-1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w+1,h+1).b * mask[2][2]
+			);
+			double g = (
+				img(w-1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w+1,h-1).g * mask[0][2] +
+				img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+				img(w-1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w+1,h+1).g * mask[2][2]
+			);
+		dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+		dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+		dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+		}
+	}
+
+	for (int w = 1; w <img._width - 1; w++){
+		int h = 0;
+		double r = (
+			img(w-1,h+1).r * mask[0][0] + img(w,h+1).r * mask[0][1] + img(w+1,h+1).r * mask[0][2] +
+			img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+			img(w-1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w+1,h+1).r * mask[2][2]
+		);
+		double b = (
+			img(w-1,h+1).b * mask[0][0] + img(w,h+1).b * mask[0][1] + img(w+1,h+1).b * mask[0][2] +
+			img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+			img(w-1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w+1,h+1).b * mask[2][2]
+		);
+		double g = (
+			img(w-1,h+1).g * mask[0][0] + img(w,h+1).g * mask[0][1] + img(w+1,h+1).g * mask[0][2] +
+			img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+			img(w-1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w+1,h+1).g * mask[2][2]
+		);
+		dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+		dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+		dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+	}
+
+	for (int w = 1; w <img._width - 1; w++){
+		int h = img._height - 1;
+		double r = (
+			img(w-1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w+1,h-1).r * mask[0][2] +
+			img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+			img(w-1,h-1).r * mask[2][0] + img(w,h-1).r * mask[2][1] + img(w+1,h-1).r * mask[2][2]
+		);
+		double b = (
+			img(w-1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w+1,h-1).b * mask[0][2] +
+			img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+			img(w-1,h-1).b * mask[2][0] + img(w,h-1).b * mask[2][1] + img(w+1,h-1).b * mask[2][2]
+		);
+		double g = (
+			img(w-1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w+1,h-1).g * mask[0][2] +
+			img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+			img(w-1,h-1).g * mask[2][0] + img(w,h-1).g * mask[2][1] + img(w+1,h-1).g * mask[2][2]
+		);
+		dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+		dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+		dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+	}
+
+	for (int h = 1; h <img._height - 1; h++) {
+		int w = img._width - 1;
+		double r = (
+			img(w-1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w-1,h-1).r * mask[0][2] +
+			img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w-1,h).r * mask[1][2] +
+			img(w-1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w-1,h+1).r * mask[2][2]
+		);
+		double b = (
+			img(w-1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w-1,h-1).b * mask[0][2] +
+			img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w-1,h).b * mask[1][2] +
+			img(w-1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w-1,h+1).b * mask[2][2]
+		);
+		double g = (
+			img(w-1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w-1,h-1).g * mask[0][2] +
+			img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w-1,h).g * mask[1][2] +
+			img(w-1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w-1,h+1).g * mask[2][2]
+		);
+		dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+		dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+		dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+	}
+
+	for (int h = 1; h <img._height - 1; h++) {
+		int w = 0;
+		double r = (
+			img(w+1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w+1,h-1).r * mask[0][2] +
+			img(w+1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+			img(w+1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w+1,h+1).r * mask[2][2]
+		);
+		double b = (
+			img(w+1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w+1,h-1).b * mask[0][2] +
+			img(w+1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+			img(w+1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w+1,h+1).b * mask[2][2]
+		);
+		double g = (
+			img(w+1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w+1,h-1).g * mask[0][2] +
+			img(w+1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+			img(w+1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w+1,h+1).g * mask[2][2]
+		);
+		dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+		dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+		dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+	}
+
+	int w = 0;
+	int h = 0;
+	double r = (
+		img(w+1,h+1).r * mask[0][0] + img(w,h+1).r * mask[0][1] + img(w+1,h+1).r * mask[0][2] +
+		img(w+1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+		img(w+1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w+1,h+1).r * mask[2][2]
+	);
+	double b = (
+		img(w+1,h+1).b * mask[0][0] + img(w,h+1).b * mask[0][1] + img(w+1,h+1).b * mask[0][2] +
+		img(w+1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+		img(w+1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w+1,h+1).b * mask[2][2]
+	);
+	double g = (
+		img(w+1,h+1).g * mask[0][0] + img(w,h+1).g * mask[0][1] + img(w+1,h+1).g * mask[0][2] +
+		img(w+1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+		img(w+1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w+1,h+1).g * mask[2][2]
+	);
+	dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+	dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+	dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+
+	w = 0;
+	h = img._height - 1;
+	r = (
+		img(w+1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w+1,h-1).r * mask[0][2] +
+		img(w+1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+		img(w+1,h-1).r * mask[2][0] + img(w,h-1).r * mask[2][1] + img(w+1,h-1).r * mask[2][2]
+	);
+	b = (
+		img(w+1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w+1,h-1).b * mask[0][2] +
+		img(w+1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+		img(w+1,h-1).b * mask[2][0] + img(w,h-1).b * mask[2][1] + img(w+1,h-1).b * mask[2][2]
+	);
+	g = (
+		img(w+1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w+1,h-1).g * mask[0][2] +
+		img(w+1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+		img(w+1,h-1).g * mask[2][0] + img(w,h-1).g * mask[2][1] + img(w+1,h-1).g * mask[2][2]
+	);
+	dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+	dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+	dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+
+	w = img._width - 1;
+	h = 0;
+	r = (
+		img(w-1,h+1).r * mask[0][0] + img(w,h+1).r * mask[0][1] + img(w-1,h+1).r * mask[0][2] +
+		img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w-1,h).r * mask[1][2] +
+		img(w-1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w-1,h+1).r * mask[2][2]
+	);
+	b = (
+		img(w-1,h+1).b * mask[0][0] + img(w,h+1).b * mask[0][1] + img(w-1,h+1).b * mask[0][2] +
+		img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w-1,h).b * mask[1][2] +
+		img(w-1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w-1,h+1).b * mask[2][2]
+	);
+	g = (
+		img(w-1,h+1).g * mask[0][0] + img(w,h+1).g * mask[0][1] + img(w-1,h+1).g * mask[0][2] +
+		img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w-1,h).g * mask[1][2] +
+		img(w-1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w-1,h+1).g * mask[2][2]
+	);
+	dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+	dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+	dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+
+	w = img._width - 1;
+	h = img._height - 1;
+	r = (
+		img(w-1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w-1,h-1).r * mask[0][2] +
+		img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w-1,h).r * mask[1][2] +
+		img(w-1,h-1).r * mask[2][0] + img(w,h-1).r * mask[2][1] + img(w-1,h-1).r * mask[2][2]
+	);
+	b = (
+		img(w-1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w-1,h-1).b * mask[0][2] +
+		img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w-1,h).b * mask[1][2] +
+		img(w-1,h-1).b * mask[2][0] + img(w,h-1).b * mask[2][1] + img(w-1,h-1).b * mask[2][2]
+	);
+	g = (
+		img(w-1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w-1,h-1).g * mask[0][2] +
+		img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w-1,h).g * mask[1][2] +
+		img(w-1,h-1).g * mask[2][0] + img(w,h-1).g * mask[2][1] + img(w-1,h-1).g * mask[2][2]
+	);
+	dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+	dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+	dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+
+	return dest;
 }
 
 Image32 Image32::edgeDetect3X3( void ) const
 {
-	////////////////////////////
-	// Do edge detection here //
-	////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	Image32 dest;
+	dest.setSize(img._width,img._height);
+	std::vector<std::vector<double>> mask = {{-1.0, -1.0, -1.0},{-1.0, 8.0, -1.0},{-1.0, -1.0, -1.0}};
+	for (int h = 1; h < img._height - 1; h++) {
+		for (int w = 1; w <img._width - 1; w++) {
+			double r = (
+				img(w-1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w+1,h-1).r * mask[0][2] +
+				img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+				img(w-1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w+1,h+1).r * mask[2][2]
+			);
+
+			double b = (
+				img(w-1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w+1,h-1).b * mask[0][2] +
+				img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+				img(w-1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w+1,h+1).b * mask[2][2]
+			);
+			double g = (
+				img(w-1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w+1,h-1).g * mask[0][2] +
+				img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+				img(w-1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w+1,h+1).g * mask[2][2]
+			);
+			dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+			dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+			dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+		}
+	}
+
+	for (int w = 1; w <img._width - 1; w++){
+		int h = 0;
+		double r = (
+			img(w-1,h+1).r * mask[0][0] + img(w,h+1).r * mask[0][1] + img(w+1,h+1).r * mask[0][2] +
+			img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+			img(w-1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w+1,h+1).r * mask[2][2]
+		);
+		double b = (
+			img(w-1,h+1).b * mask[0][0] + img(w,h+1).b * mask[0][1] + img(w+1,h+1).b * mask[0][2] +
+			img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+			img(w-1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w+1,h+1).b * mask[2][2]
+		);
+		double g = (
+			img(w-1,h+1).g * mask[0][0] + img(w,h+1).g * mask[0][1] + img(w+1,h+1).g * mask[0][2] +
+			img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+			img(w-1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w+1,h+1).g * mask[2][2]
+		);
+		dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+		dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+		dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+	}
+
+	for (int w = 1; w <img._width - 1; w++){
+		int h = img._height - 1;
+		double r = (
+			img(w-1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w+1,h-1).r * mask[0][2] +
+			img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+			img(w-1,h-1).r * mask[2][0] + img(w,h-1).r * mask[2][1] + img(w+1,h-1).r * mask[2][2]
+		);
+		double b = (
+			img(w-1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w+1,h-1).b * mask[0][2] +
+			img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+			img(w-1,h-1).b * mask[2][0] + img(w,h-1).b * mask[2][1] + img(w+1,h-1).b * mask[2][2]
+		);
+		double g = (
+			img(w-1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w+1,h-1).g * mask[0][2] +
+			img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+			img(w-1,h-1).g * mask[2][0] + img(w,h-1).g * mask[2][1] + img(w+1,h-1).g * mask[2][2]
+		);
+		dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+		dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+		dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+	}
+
+	for (int h = 1; h <img._height - 1; h++) {
+		int w = img._width - 1;
+		double r = (
+			img(w-1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w-1,h-1).r * mask[0][2] +
+			img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w-1,h).r * mask[1][2] +
+			img(w-1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w-1,h+1).r * mask[2][2]
+		);
+		double b = (
+			img(w-1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w-1,h-1).b * mask[0][2] +
+			img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w-1,h).b * mask[1][2] +
+			img(w-1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w-1,h+1).b * mask[2][2]
+		);
+		double g = (
+			img(w-1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w-1,h-1).g * mask[0][2] +
+			img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w-1,h).g * mask[1][2] +
+			img(w-1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w-1,h+1).g * mask[2][2]
+		);
+		dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+		dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+		dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+	}
+
+	for (int h = 1; h <img._height - 1; h++) {
+		int w = 0;
+		double r = (
+			img(w+1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w+1,h-1).r * mask[0][2] +
+			img(w+1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+			img(w+1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w+1,h+1).r * mask[2][2]
+		);
+		double b = (
+			img(w+1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w+1,h-1).b * mask[0][2] +
+			img(w+1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+			img(w+1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w+1,h+1).b * mask[2][2]
+		);
+		double g = (
+			img(w+1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w+1,h-1).g * mask[0][2] +
+			img(w+1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+			img(w+1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w+1,h+1).g * mask[2][2]
+		);
+		dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+		dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+		dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+	}
+
+	int w = 0;
+	int h = 0;
+	double r = (
+		img(w+1,h+1).r * mask[0][0] + img(w,h+1).r * mask[0][1] + img(w+1,h+1).r * mask[0][2] +
+		img(w+1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+		img(w+1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w+1,h+1).r * mask[2][2]
+	);
+	double b = (
+		img(w+1,h+1).b * mask[0][0] + img(w,h+1).b * mask[0][1] + img(w+1,h+1).b * mask[0][2] +
+		img(w+1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+		img(w+1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w+1,h+1).b * mask[2][2]
+	);
+	double g = (
+		img(w+1,h+1).g * mask[0][0] + img(w,h+1).g * mask[0][1] + img(w+1,h+1).g * mask[0][2] +
+		img(w+1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+		img(w+1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w+1,h+1).g * mask[2][2]
+	);
+	dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+	dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+	dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+
+	w = 0;
+	h = img._height - 1;
+	r = (
+		img(w+1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w+1,h-1).r * mask[0][2] +
+		img(w+1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w+1,h).r * mask[1][2] +
+		img(w+1,h-1).r * mask[2][0] + img(w,h-1).r * mask[2][1] + img(w+1,h-1).r * mask[2][2]
+	);
+	b = (
+		img(w+1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w+1,h-1).b * mask[0][2] +
+		img(w+1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w+1,h).b * mask[1][2] +
+		img(w+1,h-1).b * mask[2][0] + img(w,h-1).b * mask[2][1] + img(w+1,h-1).b * mask[2][2]
+	);
+	g = (
+		img(w+1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w+1,h-1).g * mask[0][2] +
+		img(w+1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w+1,h).g * mask[1][2] +
+		img(w+1,h-1).g * mask[2][0] + img(w,h-1).g * mask[2][1] + img(w+1,h-1).g * mask[2][2]
+	);
+	dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+	dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+	dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+
+	w = img._width - 1;
+	h = 0;
+	r = (
+		img(w-1,h+1).r * mask[0][0] + img(w,h+1).r * mask[0][1] + img(w-1,h+1).r * mask[0][2] +
+		img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w-1,h).r * mask[1][2] +
+		img(w-1,h+1).r * mask[2][0] + img(w,h+1).r * mask[2][1] + img(w-1,h+1).r * mask[2][2]
+	);
+	b = (
+		img(w-1,h+1).b * mask[0][0] + img(w,h+1).b * mask[0][1] + img(w-1,h+1).b * mask[0][2] +
+		img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w-1,h).b * mask[1][2] +
+		img(w-1,h+1).b * mask[2][0] + img(w,h+1).b * mask[2][1] + img(w-1,h+1).b * mask[2][2]
+	);
+	g = (
+		img(w-1,h+1).g * mask[0][0] + img(w,h+1).g * mask[0][1] + img(w-1,h+1).g * mask[0][2] +
+		img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w-1,h).g * mask[1][2] +
+		img(w-1,h+1).g * mask[2][0] + img(w,h+1).g * mask[2][1] + img(w-1,h+1).g * mask[2][2]
+	);
+	dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+	dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+	dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+
+	w = img._width - 1;
+	h = img._height - 1;
+	r = (
+		img(w-1,h-1).r * mask[0][0] + img(w,h-1).r * mask[0][1] + img(w-1,h-1).r * mask[0][2] +
+		img(w-1,h).r * mask[1][0] + img(w,h).r * mask[1][1] + img(w-1,h).r * mask[1][2] +
+		img(w-1,h-1).r * mask[2][0] + img(w,h-1).r * mask[2][1] + img(w-1,h-1).r * mask[2][2]
+	);
+	b = (
+		img(w-1,h-1).b * mask[0][0] + img(w,h-1).b * mask[0][1] + img(w-1,h-1).b * mask[0][2] +
+		img(w-1,h).b * mask[1][0] + img(w,h).b * mask[1][1] + img(w-1,h).b * mask[1][2] +
+		img(w-1,h-1).b * mask[2][0] + img(w,h-1).b * mask[2][1] + img(w-1,h-1).b * mask[2][2]
+	);
+	g = (
+		img(w-1,h-1).g * mask[0][0] + img(w,h-1).g * mask[0][1] + img(w-1,h-1).g * mask[0][2] +
+		img(w-1,h).g * mask[1][0] + img(w,h).g * mask[1][1] + img(w-1,h).g * mask[1][2] +
+		img(w-1,h-1).g * mask[2][0] + img(w,h-1).g * mask[2][1] + img(w-1,h-1).g * mask[2][2]
+	);
+	dest(w,h).r = (unsigned char) std::min((int) std::max((int) r, 0), 255);
+	dest(w,h).g = (unsigned char) std::min((int) std::max((int) g, 0), 255);
+	dest(w,h).b = (unsigned char) std::min((int) std::max((int) b, 0), 255);
+
+	return dest;
 }
 
 Image32 Image32::scaleNearest( double scaleFactor ) const
 {
-	/////////////////////////////////////////////////
-	// Do scaling with nearest-point sampling here //
-	/////////////////////////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	Image32 dest;
+	dest.setSize((int) img._width * scaleFactor, (int) img._height * scaleFactor);	
+
+	for (int h = 1; h < dest._height - 1; h++) {
+		for (int w = 1; w <dest._width - 1; w++) {
+			int s_h = floor((h / scaleFactor) + 0.5);
+			int s_w = floor((w / scaleFactor) + 0.5);
+			dest(w,h) = img(s_w,s_h);
+		}
+	}
+
+	return dest;	
 }
 
 Image32 Image32::scaleBilinear( double scaleFactor ) const
