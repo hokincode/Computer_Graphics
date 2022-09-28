@@ -58,8 +58,15 @@ Point2D OrientedLineSegment::perpendicular( void ) const
 	////////////////////////////////
 	// Set the perpendicular here //
 	////////////////////////////////
-	WARN( "method undefined" );
-	return Point2D();
+	Point2D end_1 = endPoints[0];
+	Point2D end_2 = endPoints[1];
+
+	Point2D end_normal(end_2[0] - end_1[0], end_2[1] - end_1[1]);
+
+	int x = - end_normal[1];
+	int y = end_normal[0];
+
+	return Point2D(x,y);
 }
 
 Point2D OrientedLineSegment::GetSourcePosition( const OrientedLineSegment& source , const OrientedLineSegment& destination , Point2D target )
@@ -68,5 +75,54 @@ Point2D OrientedLineSegment::GetSourcePosition( const OrientedLineSegment& sourc
 	// Set the source position here //
 	//////////////////////////////////
 	WARN( "method undefined" );
-	return Point2D();
+
+	double z1 = destination.endPoints[1][0] - destination.endPoints[0][0];
+	double z2 = destination.endPoints[1][1] - destination.endPoints[0][1];
+
+	double j1 = target[0] - destination.endPoints[0][0];
+	double j2 = target[1] - destination.endPoints[0][1];
+
+	double raw_u = z1 * j1 + z2 * j2;
+
+	double length_dest = sqrt(pow(destination.endPoints[1][0] - destination.endPoints[0][0],2) - pow(destination.endPoints[1][1] - destination.endPoints[0][1], 2));
+
+	double u = raw_u / length_dest / length_dest;
+
+	// double v = destination.distance(target);
+
+	double P1X = destination.endPoints[0][0];
+	double P1Y = destination.endPoints[0][1];
+	double P2X = destination.endPoints[1][0];
+	double P2Y = destination.endPoints[1][1];
+	double P3X = target[0];
+	double P3Y = target[1];
+
+	double numerator = P2Y*(P1X-P3X) + P1Y*(P3X-P2X) + P3Y*(P2X-P1X);
+    double denominator = (P2X-P1X)*(P1X-P3X) + (P2Y-P1Y)*(P1Y-P3Y);
+    double ratio = numerator/denominator;
+
+    double angleRad = atan(ratio);
+
+	double target_endpoint_distance = sqrt(pow(target[0] - destination.endPoints[0][0],2) - pow(target[1] - destination.endPoints[0][1], 2));
+
+	double v = target_endpoint_distance * sin(angleRad);
+
+	if (v < 0) {
+		v = - v;
+	}
+
+	double s_x = source.endPoints[1][0] - source.endPoints[0][0];
+	double s_y = source.endPoints[1][1] - source.endPoints[0][1];
+
+	double new_u_x = source.endPoints[1][0] + s_x * u;
+	double new_u_y = source.endPoints[1][1] + s_y * u;
+
+	double souce_slope = (source.endPoints[1][1] - source.endPoints[0][1]) / (source.endPoints[1][0] - source.endPoints[0][0]);
+	double find_p_d_slope = 1 /  souce_slope;
+	double rad = atan(find_p_d_slope);
+
+	double final_p_x = new_u_x + sin(rad) * v;
+	double final_p_y = new_u_y + cos(rad) * v; 
+
+	return Point2D((int)final_p_x, (int)final_p_y);
 }
