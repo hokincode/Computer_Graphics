@@ -783,17 +783,47 @@ Image32 Image32::scaleGaussian( double scaleFactor ) const
 	////////////////////////////////////////////
 	// Do scaling with Gaussian sampling here //
 	////////////////////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	Image32 dest;
+	dest.setSize((int) img._width * scaleFactor, (int) img._height * scaleFactor);	
+
+	for (int h = 1; h < dest._height - 1; h++) {
+		for (int w = 1; w <dest._width - 1; w++) {
+			Point2D p;
+			p[0] = w / scaleFactor;
+			p[1] = h / scaleFactor;
+			dest(w,h) = img.gaussianSample(p, 0.5, 0.25);
+		}
+	}
+
+	return dest;
 }
+
 
 Image32 Image32::rotateNearest( double angle ) const
 {
 	//////////////////////////////////////////////////
 	// Do rotation with nearest-point sampling here //
 	//////////////////////////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	double rad = angle * (M_PI / 180.0);
+	double cosine = cos(rad);
+	double sine = sin(rad);
+	int width = int(img._height * sine + img._width * cosine);
+	int height = int(img._height * cosine + img._width * sine);
+	int the_longer_side = std::max(width, height);
+	Image32 newimage; 
+	newimage.setSize(width, height);
+	for (int h = 0; h < height; h++) {
+		for (int w = 0; w < width; w++) {
+			double x = cosine * ( w - (width / 2)) - sine * (h - (height / 2)) + img._width / 2;
+			double y = sine * ( w - (width / 2)) + cosine * (h - (height / 2)) + img._height / 2;
+			if ( 0 < x && x < 199 && 0 < y && y < 199) {
+				newimage(w,h) = img.nearestSample(Point2D((int)x, (int)y));
+			}
+		}
+	}
+	return newimage;
 }
 
 Image32 Image32::rotateBilinear( double angle ) const
@@ -801,8 +831,25 @@ Image32 Image32::rotateBilinear( double angle ) const
 	/////////////////////////////////////////////
 	// Do rotation with bilinear sampling here //
 	/////////////////////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	double rad = angle * (M_PI / 180.0);
+	double cosine = cos(rad);
+	double sine = sin(rad);
+	int width = int(img._height * sine + img._width * cosine);
+	int height = int(img._height * cosine + img._width * sine);
+	int the_longer_side = std::max(width, height);
+	Image32 newimage; 
+	newimage.setSize(width, height);
+	for (int h = 0; h < height; h++) {
+		for (int w = 0; w < width; w++) {
+			double x = cosine * ( w - (width / 2)) - sine * (h - (height / 2)) + img._width / 2;
+			double y = sine * ( w - (width / 2)) + cosine * (h - (height / 2)) + img._height / 2;
+			if ( 0 < x && x < 199 && 0 < y && y < 199) {
+				newimage(w,h) = img.bilinearSample(Point2D(floor(x), floor(y)));
+			}
+		}
+	}
+	return newimage;
 }
 
 Image32 Image32::rotateGaussian( double angle ) const
@@ -810,8 +857,25 @@ Image32 Image32::rotateGaussian( double angle ) const
 	/////////////////////////////////////////////
 	// Do rotation with Gaussian sampling here //
 	/////////////////////////////////////////////
-	WARN( "method undefined" );
-	return Image32();
+	Image32 img(*this);
+	double rad = angle * (M_PI / 180.0);
+	double cosine = cos(rad);
+	double sine = sin(rad);
+	int width = int(img._height * sine + img._width * cosine);
+	int height = int(img._height * cosine + img._width * sine);
+	int the_longer_side = std::max(width, height);
+	Image32 newimage; 
+	newimage.setSize(width, height);
+	for (int h = 0; h < height; h++) {
+		for (int w = 0; w < width; w++) {
+			double x = cosine * ( w - (width / 2)) - sine * (h - (height / 2)) + img._width / 2;
+			double y = sine * ( w - (width / 2)) + cosine * (h - (height / 2)) + img._height / 2;
+			if ( 0 < x && x < 199 && 0 < y && y < 199) {
+				newimage(w,h) = img.gaussianSample(Point2D(floor(x), floor(y)), 0.25, 0.5);
+			}
+		}
+	}
+	return newimage;
 }
 
 void Image32::setAlpha( const Image32& matte )
@@ -936,6 +1000,31 @@ Pixel32 Image32::gaussianSample( Point2D p , double variance , double radius ) c
 	///////////////////////////////
 	// Do Gaussian sampling here //
 	///////////////////////////////
-	WARN( "method undefined" );
-	return Pixel32();
+	Pixel32 newpixel;
+	Image32 img(*this);
+	double red = 0.0;
+	double green = 0.0;
+	double blue = 0.0;
+	int upper = ceil(p[1] + radius);
+	int lower = floor(p[1] - radius);
+	int left = floor(p[0] - radius);
+	int right = ceil(p[0] + radius);
+	double normality = 0.0;
+	for (int h = lower; h < upper; h++){
+		for (int w = left; w < right; w++){
+			if ( pow(w - p[0],2) + pow(h - p[1],2) > pow(radius,2)) continue;
+			double gaussian_Distri = (1.0 / (2.0 * M_PI * variance)) * exp( - (pow(w - p[0],2) + pow(h - p[1],2)) / (2 * variance) );
+			red += (double) img(w,h).r * gaussian_Distri;
+			blue += (double) img(w,h).b * gaussian_Distri;
+			green += (double) img(w,h).g * gaussian_Distri;
+			normality += gaussian_Distri;
+		}
+	}
+	red = red / normality;
+	green = green / normality;
+	blue = blue / normality;
+	newpixel.r = (unsigned char) std::min((int) std::max((int) red, 0), 255);
+	newpixel.g = (unsigned char) std::min((int) std::max((int) green, 0), 255);
+	newpixel.b = (unsigned char) std::min((int) std::max((int) blue, 0), 255);
+	return newpixel;
 }
