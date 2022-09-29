@@ -897,17 +897,18 @@ Image32 Image32::composite( const Image32& overlay ) const
 
 Image32 Image32::CrossDissolve( const Image32& source , const Image32& destination , double blendWeight )
 {
+	WARN( "BUG" );
 	Image32 dest(destination);
 	Image32 img(source);
 
-	for (int h = 0; h <= dest._height - 1; h++) {
-		for (int w = 0; w <= dest._width - 1; w++) {
-			dest(w,h).a = (unsigned char) blendWeight * 255;
+	for (int h = 0; h < dest._height; h++) {
+		for (int w = 0; w < dest._width; w++) {
+			dest(w,h).a = (unsigned char) (blendWeight * 255.0);
 		}
 	}
 
-	for (int h = 0; h <= img._height - 1; h++) {
-		for (int w = 0; w <= img._width - 1; w++) {
+	for (int h = 0; h < img._height; h++) {
+		for (int w = 0; w < img._width; w++) {
 			double frac = dest(w,h).a / 255.0;
 			img(w,h).r = frac * dest(w,h).r + (1.0 - frac) * img(w,h).r;
 			img(w,h).b = frac * dest(w,h).b + (1.0 - frac) * img(w,h).b;
@@ -929,10 +930,11 @@ Image32 Image32::warp( const OrientedLineSegmentPairs& olsp ) const
 	Image32 dest;
 	dest.setSize(img._width,img._height);
 
-	for (int h = 0; h <= img._height - 1; h++) {
-		for (int w = 0; w <= img._width - 1; w++) {
-			dest(w,h) = img.bilinearSample(olsp.getSourcePosition(Point2D(w,h)));
-			//dest(w,h) = img.bilinearSample(Point2D(10,10));
+	for (int h = 1; h < dest._height ; h++) {
+		for (int w = 1; w < dest._width ; w++) {
+			if (olsp.getSourcePosition(Point2D(w,h))[0] > 0 &&  olsp.getSourcePosition(Point2D(w,h))[1] > 0) { 
+			 	dest(w,h) = img.nearestSample(olsp.getSourcePosition(Point2D(w,h)));
+			}
 		}
 	}
 
@@ -998,7 +1000,8 @@ Pixel32 Image32::bilinearSample( Point2D p ) const
 	int s_h_v_1 = floor(p[1]);
 	int s_w_u_2 = s_w_u_1 + 1;
 	int s_h_v_2 = s_h_v_1 + 1;
-
+	if (s_w_u_2 >= _width) s_w_u_2 = s_w_u_1 - 1;
+	if (s_h_v_2 >= _height) s_h_v_2 = s_h_v_1 - 1;
 	double du = p[0] - s_w_u_1;
 	double dv = p[1] - s_h_v_1;
 

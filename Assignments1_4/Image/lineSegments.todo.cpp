@@ -13,6 +13,8 @@ double OrientedLineSegment::length( void ) const
 	double len = sqrt(pow(endPoints[1][0] -  endPoints[0][0],2) + pow(endPoints[1][1] -  endPoints[0][1],2));
 	return len;
 }
+
+
 double OrientedLineSegment::distance( Point2D p ) const
 {
 	//////////////////////////////
@@ -66,7 +68,11 @@ Point2D OrientedLineSegment::perpendicular( void ) const
 	int x = - end_normal[1];
 	int y = end_normal[0];
 
-	return Point2D(x,y);
+	Point2D c = {endPoints[1][0] - endPoints[0][0], endPoints[1][1] - endPoints[0][1]};
+	Point2D p = {-c[1], c[0]};
+	Point2D u = {p[0]/p.length(), p[1]/p.length()};
+
+	return u;
 }
 
 Point2D OrientedLineSegment::GetSourcePosition( const OrientedLineSegment& source , const OrientedLineSegment& destination , Point2D target )
@@ -74,7 +80,6 @@ Point2D OrientedLineSegment::GetSourcePosition( const OrientedLineSegment& sourc
 	//////////////////////////////////
 	// Set the source position here //
 	//////////////////////////////////
-	WARN( "method undefined" );
 
 	double z1 = destination.endPoints[1][0] - destination.endPoints[0][0];
 	double z2 = destination.endPoints[1][1] - destination.endPoints[0][1];
@@ -88,8 +93,6 @@ Point2D OrientedLineSegment::GetSourcePosition( const OrientedLineSegment& sourc
 
 	double u = raw_u / length_dest / length_dest;
 
-	// double v = destination.distance(target);
-
 	double P1X = destination.endPoints[0][0];
 	double P1Y = destination.endPoints[0][1];
 	double P2X = destination.endPoints[1][0];
@@ -97,22 +100,36 @@ Point2D OrientedLineSegment::GetSourcePosition( const OrientedLineSegment& sourc
 	double P3X = target[0];
 	double P3Y = target[1];
 
-	double numerator = P2Y*(P1X-P3X) + P1Y*(P3X-P2X) + P3Y*(P2X-P1X);
-    double denominator = (P2X-P1X)*(P1X-P3X) + (P2Y-P1Y)*(P1Y-P3Y);
-    double ratio = numerator/denominator;
+	double N_Y = P2Y - P1Y;
+	double N_X = P2X - P1X;
 
-    double angleRad = atan(ratio);
+	double v1_v2 = P3X * N_X + P3Y * N_Y;
+	double _v2_ = sqrt(pow(N_X,2) + pow(N_Y,2));
 
-	double target_endpoint_distance = sqrt(pow(target[0] - destination.endPoints[0][0],2) - pow(target[1] - destination.endPoints[0][1], 2));
-
-	double v = target_endpoint_distance * sin(angleRad);
-
-	if (v < 0) {
-		v = - v;
-	}
+	double v = v1_v2 / _v2_ / _v2_;
 
 	double s_x = source.endPoints[1][0] - source.endPoints[0][0];
 	double s_y = source.endPoints[1][1] - source.endPoints[0][1];
+
+//	double new_u_x = source.endPoints[1][0] + s_x * u;
+//	double new_u_y = source.endPoints[1][1] + s_y * u;
+//
+//	double souce_slope = (source.endPoints[1][1] - source.endPoints[0][1]) / (source.endPoints[1][0] - source.endPoints[0][0]);
+//	double find_p_d_slope = 1 /  souce_slope;
+//	double rad = atan(find_p_d_slope);
+//
+//	double final_p_x = new_u_x + sin(rad) * v;
+//	double final_p_y = new_u_y + cos(rad) * v; 
+
+	Point2D v_d = {destination.endPoints[1][0] - destination.endPoints[0][0], destination.endPoints[1][1] - destination.endPoints[0][1]};
+	Point2D v_s = {source.endPoints[1][0] - source.endPoints[0][0], source.endPoints[1][1] - source.endPoints[0][1]};
+	Point2D v_t = {target[0] - destination.endPoints[0][0], target[1] - destination.endPoints[0][1]};
+	Point2D u_v_d = destination.perpendicular();
+	Point2D u_v_s = source.perpendicular();
+
+	v = v_t[0] * u_v_d[0] + v_t[1] * u_v_d[1];
+	u = v_t[0] * v_d[0] + v_t[1] * v_d[1];
+	u = u / v_d.length() / v_d.length();
 
 	double new_u_x = source.endPoints[1][0] + s_x * u;
 	double new_u_y = source.endPoints[1][1] + s_y * u;
@@ -124,5 +141,12 @@ Point2D OrientedLineSegment::GetSourcePosition( const OrientedLineSegment& sourc
 	double final_p_x = new_u_x + sin(rad) * v;
 	double final_p_y = new_u_y + cos(rad) * v; 
 
-	return Point2D((int)final_p_x, (int)final_p_y);
+	Point2D f = {source.endPoints[0][0] + u * v_s[0] +  u_v_s[0] * v, source.endPoints[0][1] + u * v_s[1] + u_v_s[1] * v };
+
+	std::string what_happen = "final" + std::to_string(f[0]) + "and" + std::to_string(f[1]);
+	std::string what_happen_2 = "target" + std::to_string(target[0]) + "and" + std::to_string(target[1]);
+	WARN(what_happen);
+	WARN(what_happen_2);
+	// return Point2D((int)final_p_x, (int)final_p_y);
+	return f;
 }
