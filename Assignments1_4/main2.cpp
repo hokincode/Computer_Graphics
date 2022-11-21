@@ -35,6 +35,9 @@ CmdLineParameter< float > CutOffThreshold( "cutOff" , 0.0001f );
 CmdLineParameter< int > LightSamples( "lSamples" , 100 );
 CmdLineParameter< int > Parallelization( "parallel" , (int)ThreadPool::THREAD_POOL );
 CmdLineReadable Progress( "progress" );
+/**
+   Crystal is a big
+**/
 
 
 CmdLineReadable* params[] =
